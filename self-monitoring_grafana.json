@@ -1,0 +1,118 @@
+{
+  "id": null,
+  "uid": "full-observability",
+  "title": "Full Observability Stack",
+  "tags": [
+    "observability",
+    "prometheus",
+    "loki",
+    "tempo",
+    "pyroscope",
+    "otel"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "graph",
+      "title": "Prometheus Metrics",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum by (job) (rate(prometheus_http_requests_total[5m]))",
+          "legendFormat": "HTTP Requests",
+          "refId": "A"
+        },
+        {
+          "expr": "group by (job) (process_resident_memory_bytes)",
+          "legendFormat": "Prometheus Memory",
+          "refId": "B"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      }
+    },
+    {
+      "type": "graph",
+      "title": "Tempo Traces Received",
+      "datasource": "Tempo",
+      "targets": [
+        {
+          "expr": "tempo_distributor_spans_received_total",
+          "legendFormat": "{{tenant}}",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      }
+    },
+    {
+      "type": "logs",
+      "title": "Loki Logs",
+      "datasource": "Loki",
+      "targets": [
+        {
+          "expr": "{job=\"varlogs\"}",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 24,
+        "h": 8
+      }
+    },
+    {
+      "type": "graph",
+      "title": "OTEL Collector Metrics",
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "otelcol_processor_batch_batches_total",
+          "legendFormat": "Batches Processed",
+          "refId": "A"
+        },
+        {
+          "expr": "otelcol_exporter_send_failed_spans_total",
+          "legendFormat": "Failed Spans",
+          "refId": "B"
+        }
+      ],
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      }
+    },
+    {
+      "type": "graph",
+      "title": "Pyroscope Profiling",
+      "datasource": "Pyroscope",
+      "targets": [
+        {
+          "expr": "pyroscope_cpu_samples_total",
+          "legendFormat": "CPU Samples",
+          "refId": "A"
+        }
+      ],
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      }
+    }
+  ]
+}
