@@ -1,0 +1,93 @@
+services:
+  otel-collector:
+    image: 'otel/opentelemetry-collector-contrib:latest'
+    container_name: 'os-otel-collector'
+    volumes:
+      - './otel/collector-config.yaml:/etc/otelcol/config.yaml:ro'
+    command: ['--config=/etc/otelcol/config.yaml']
+    ports: []
+    # - '4317:4317'
+    #  - '4318:4318'
+    networks:
+      - 'observability'
+    depends_on:
+      - 'prometheus'
+      - 'loki'
+      - 'tempo'
+  prometheus:
+    image: 'dhi.io/prometheus:3.9'
+    container_name: 'os-prometheus'
+    volumes:
+      - './prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro'
+    ports:
+      - '9090:9090'
+    networks:
+      - 'observability'
+  promtail:
+    image: 'dhi.io/promtail:3'
+    container_name: 'os-promtail'
+    volumes:
+      - '/var/log:/var/log:ro'
+      - '/var/lib/docker/containers:/var/lib/docker/containers:ro'
+      - './promtail:/etc/promtail:ro'
+    command: '-config.file=/etc/promtail/promtail-config.yaml'
+    depends_on:
+      - 'loki'
+    networks:
+      - 'observability'
+  loki:
+    image: 'dhi.io/loki:3'
+    container_name: 'os-loki'
+    volumes:
+      - 'loki-data:/var/loki'
+    ports:
+      - '3100:3100'
+    networks:
+      - 'observability'
+  tempo:
+    image: 'dhi.io/tempo:2'
+    container_name: 'os-tempo'
+    volumes:
+      - './tempo/tempo-config.yaml:/etc/tempo/tempo.yaml:ro'
+      - 'tempo-data:/var/tempo'
+    ports:
+      - '3200:3200'
+      - '4317:4317'
+      - '4318:4318'
+    networks:
+      - 'observability'
+  pyroscope:
+    image: 'dhi.io/pyroscope:1'
+    container_name: 'os-pyroscope'
+    environment:
+      - 'STORAGE_PATH=/pyroscope-data'
+    volumes:
+      - 'pyroscope-data:/pyroscope-data'
+    ports:
+      - '4040:4040'
+    networks:
+      - 'observability'
+  grafana:
+    image: 'dhi.io/grafana:12'
+    container_name: 'os-grafana'
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: 'ChangeMe'
+      GF_AUTH_ANONYMOUS_ENABLED: 'true'
+      GF_AUTH_ANONYMOUS_ORG_ROLE: 'Admin'
+    volumes:
+      - './grafana/provisioning:/etc/grafana/provisioning:ro'
+    ports:
+      - '3000:3000'
+    depends_on:
+      - 'prometheus'
+      - 'loki'
+      - 'tempo'
+    networks:
+      - 'observability'
+volumes:
+  loki-data:
+  tempo-data:
+  pyroscope-data:
+networks:
+  observability:
+    driver: 'bridge'
